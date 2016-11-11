@@ -1,0 +1,36 @@
+<html>
+   <head> 
+   	<meta charset="UTF-8" />
+   		<title>我的工具箱</title>
+   		<style type="text/css">
+   			html, body{ height:700px;}
+   			.toolbox{display: inline-block;width: 20%;height: 100%;float: left;}
+   			.content{display: inline-block;width: 75%;height: 100%;border: none;}
+   		</style>
+   		<script type="text/javascript" src="js/vue.min.js"></script>
+   		<script type="text/javascript" src="js/toolbox.js"></script>
+   		
+   </head>
+   <body>
+      <div class="header">
+         <a href="../index.html">返回首页</a>
+      </div>
+   		<div id="app" class="toolbox">
+   			<ul>
+   				<li v-for="tool in toolbox"><a href="#" onclick="changeContent('{{tool.uri}}')">{{tool.name}}</a></li>
+   			</ul>
+   		</div>
+   		<iframe src="" id="content" class="content"></iframe>
+   </body>
+   <script type="text/javascript">
+   			
+   			function changeContent(uri){
+   				document.getElementById('content').src=uri;
+   			}
+
+   			var vm = new Vue({
+   				el: '#app',
+   				data: {'toolbox':toollist}
+   			});
+	</script>
+</html>

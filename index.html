@@ -11,7 +11,11 @@
 
     <style type="text/css">
       .container{text-align: center;}
-      .poem{text-align: left;margin: 0 auto;}
+      div.title{background-image: url(images/bg-ramp.jpg)}
+      .poem, div.title{text-align: left;margin: 0 auto;width: 400px;}
+      div.title {text-align: right;}
+      span.title{font-size: 30px; color: orange;}
+      span.author{float-size:25px; color: #777777;}
     </style>
     
     <script type="text/javascript">
@@ -22,9 +26,13 @@
 
   <body>
     <div class="container">
-      <div></div>
+      <div class="title">
+        <a href="tools/index.html">工具</a>
+      </div>
       <div class="poem">
       <pre>
+                  <span class="title">蜀道难</span>
+                      <span class="author">李白</span>
       噫吁嚱，危乎高哉！蜀道之难，难于上青天！
       蚕丛及鱼凫，开国何茫然！
       尔来四万八千岁，不与秦塞通人烟。

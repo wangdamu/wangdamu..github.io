@@ -1,0 +1,117 @@
+<html>
+   <head> 
+   	<meta charset="UTF-8" />
+   		<title>身份证识别</title>
+   		<script type="text/javascript" src="../js/vue.min.js"></script>
+   		<style type="text/css">
+   			.mainPanel{width:90%;height: 90%;background-color: #EEE; margin: auto;padding-left:40px;padding-top: 40px;font-size: 25px;}
+   			.mainPanel input{width: 80%;height: 30px;font-size: 25px;color:orange;}
+   			.moneydisplay{margin-top:20px;}
+   			#iddisplay ul{height: 70%; overflow-y: scroll;}
+   		</style>
+   </head>
+   <body>
+      <div class="mainPanel">
+      		<div>只能识别18位的身份证号(xxxxxxxxxx****xxxx， x表示数字，*是要识别的月份和日期)</div>
+	       <div>
+	       	 <span>身份证号：</span><input type="text" name="" id="identity" placeholder="请输入身份证号: xxxxxxxxxx****xxxx">
+	       	 <input type="button" name="" value="识别" onclick="findIdentities()">
+	       </div>
+	       <div id="iddisplay">
+	       	 <div>总共找到了{{idCount}}条身份证号</div>
+	       	 <ul>
+	       	 	<li v-for="ret in resultList">{{ret}}</li>
+	       	 </ul>
+	       </div>
+       </div>
+   </body>
+   <script type="text/javascript">
+   		function isLeapYear(pYear){
+	       if(!isNaN(parseInt(pYear))){
+	          return ((pYear%4==0 && pYear%100!=0)||(pYear%100==0 && pYear%400==0));
+	      	}
+		     return false;
+       }
+
+       var vm = new Vue({
+			el: '#iddisplay',
+			data: {'resultList':[], 'idCount':0}
+		});
+
+       var days0 = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+       var days1 = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+       var weight = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+       var result = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2];
+
+       function findIdentities(){
+       	var id = document.getElementById('identity').value;
+       	var ret = findValidIdentities(id);
+       	vm.resultList.splice(0, vm.resultList.length);
+       	vm.idCount = ret.length;
+       	for(var i = 0; i < ret.length; i++){
+       		vm.resultList.push(ret[i]);	
+       	}
+       	
+       }
+
+       function findValidIdentities(id){
+       	var result = [];
+       	var year = id.substr(6, 4);
+       	var days = isLeapYear(year)? days1:days0;
+       	var tMonth = id.substr(10, 2);
+       	var tDay = id.substr(12, 2);
+       	for(var month = 1; month <= 12; month++){
+       		var monthStr = '' + (month < 10? '0' + month:month);
+       		if(tMonth != '**'){
+       			var monthValid = true;
+       			for(var i = 0; i < 2; i++){
+       				if(tMonth.charAt(i) != '*' && tMonth.charAt(i) != monthStr.charAt(i)){
+       					monthValid = false;
+       					break;
+       				}
+       			}
+       			if(!monthValid){
+       				continue;
+       			}
+       		}
+       		for(var day = 1; day <= days[month - 1]; day++){
+       			var dayStr = '' + (day < 10? '0' + day:day);
+       			if(tDay != '**'){
+	       			var dayValid = true;
+	       			for(var i = 0; i < 2; i++){
+	       				if(tDay.charAt(i) != '*' && tDay.charAt(i) != dayStr.charAt(i)){
+	       					dayValid = false;
+	       					break;
+	       				}
+	       			}
+	       			if(!dayValid){
+	       				continue;
+	       			}
+	       		}
+       			var monthday = monthStr + dayStr;
+       			var genId = id.substr(0, 10) + monthday + id.substr(14);
+       			if(isValidIdentity(genId)){
+       				result.push(genId);
+       			}
+       		}
+       	}
+       	return result;
+       }
+
+
+       // 是否是有效的身份证
+       function isValidIdentity(id){
+       	   if(id.length != 18){
+       	   	return false;
+       	   }
+       	   var sum = 0;
+       	   for(var i = 0; i < id.length - 1; i++){
+       	   	 sum += parseInt(id.charAt(i)) * weight[i];
+       	   }
+       	   var mod = sum % 11;
+       	   var ret = result[mod];
+       	   return ret == id.charAt(id.length - 1);
+       }
+   </script>
+</html>

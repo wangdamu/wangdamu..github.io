@@ -1,0 +1,155 @@
+<html>
+   <head> 
+   	<meta charset="UTF-8" />
+   		<title>发票报销帮助</title>
+   		<script type="text/javascript" src="../js/vue.min.js"></script>
+   		<script type="text/javascript" src="../js/common.js"></script>
+   		<style type="text/css">
+   			.mainPanel{width:90%;height: 45%;background-color: #EEE; margin: auto;padding-left:40px;padding-top: 40px;font-size: 25px;}
+   			.mainPanel input[type=text]{width: 30%;height: 30px;font-size: 25px;color:orange;}
+   			.moneydisplay{margin-top:20px;}
+   			#moneydisplayspan{color:red;}
+   			.category{width: 100px; text-align: right; margin-right: 10px;}
+   			a.delete{width: 24px; height:24px;background-color: gray;color: white;text-align: center;vertical-align: middle;}
+   			a.delete:hover{background-color: red;cursor: pointer;}
+   			span.data{color: orange;}
+   		</style>
+   </head>
+   <body>
+      <div class="mainPanel">
+      		<span>结果：</span><a href="javascript:refreshResult();">刷新</a>
+	       <ul id="invoiceDisplay">
+	       	<li v-for="ret in resultList">
+	       		<input type="checkbox" name="" v-model="selectedCache[ret.title]" v-on:change="selectChange"><span class="data">{{ret.title}}</span>的发票有￥<span class="data">{{ret.money}}</span>（张数：<span class="data">{{ret.ammount}}（{{ret.ammountUpper}}）</span>张）
+	       	  <!--
+	       		<div><span class="category">类别:</span><span class="data">{{ret.title}}</span></div>
+	       		<div><span class="category">额度:</span><span class="data">{{ret.money}}</span></div>
+	       		<div><span class="category">发票张数:</span><span class="data">{{ret.ammount}}</span></div>
+	       		-->
+	       	</li>
+	       	<li>合计金额: <span class="data">{{total.totalMoney}}</span>（发票张数: <span class="data">{{total.totalAmmount}}（{{total.totalAmmountUpper}}）</span>）大写: <span class="data">{{total.totalUpper}}</span></li>
+	       </ul>
+       </div>
+       <div id="inputing" class="mainPanel">
+       		<select id="categoryselect" onchange="categoryChange(this)">
+       			<option value="">请选择...</option>
+       			<option v-for="ret in categories" value="{{ret}}">{{ret}}</option>
+       		</select>
+       		<input type="text" id="moneyInput"><button onclick="addMoney()">添加</button>
+       		<ul>
+       			<li v-for="ret in items" track-by="$index">{{ret}}  <a class="delete" href="javascript:deleteMoney({{$index}});">X</a></li>
+       		</ul>
+       </div>
+   </body>
+   <script type="text/javascript">
+   		var categories = ['办公用品', '油费', '餐费', '交通费', '食品'];
+   		var vm = new Vue({
+			el: '#invoiceDisplay',
+			data: {'resultList':[], 'idCount':0, selectedCache:{}, selectChangeCounter:0},
+			computed:{
+				total:function(){
+					
+					var totalMoney = 0;
+					var totalAmmount = 0;
+
+					var ct = this.selectChangeCounter;
+					for(var i = 0; i < this.resultList.length; i++){
+						var r = this.resultList[i];
+						if(this.selectedCache[r.title]){
+							totalMoney += r.money;
+							totalAmmount += r.ammount;
+						}
+					}
+					
+					var totalUpper = upMoneyDigit(totalMoney);
+					return {totalMoney:totalMoney, totalAmmount:totalAmmount, totalUpper:totalUpper, totalAmmountUpper:upJustDigit(totalAmmount)};
+				}
+			},
+			methods: {
+    			selectChange: function (event) {
+    				this.selectChangeCounter++;
+    			}
+    		}
+		});
+
+		for(var i = 0; i < categories.length; i++){
+			vm.selectedCache[categories[i]] = true;
+		}
+   		
+   		var vm2 = new Vue({
+			el: '#inputing',
+			data: {'categories':categories, 'items':[]}
+		});
+
+		function refreshResult(){
+			var resultList = [];
+			for(var i = 0; i < categories.length; i++){
+				var category = categories[i];
+				var itemsStr = localStorage[category];
+				if(itemsStr){
+					var items = itemsStr.split(',');
+					var result = {title: category};
+					for(var j = 0; j < items.length; j++){
+						var item = items[j];
+						if(!result.money){
+							result.money = 0;
+						}
+						if(!result.ammount){
+							result.ammount = 0;
+						}
+						result.money += parseFloat(item);
+						result.ammount++;
+					}
+					if(result.money && result.money > 0){
+						result.ammountUpper = upJustDigit(result.ammount);
+						resultList.push(result);
+					}
+				}
+			}
+			vm.resultList = resultList;
+			//vm.total = calcTotal();
+		}
+
+		function deleteMoney(index){
+			vm2.items.splice(index, 1);
+
+			updateMoney();
+		}
+
+		function updateMoney(){
+			var category = document.getElementById('categoryselect').value;
+			if(category){
+				localStorage[category] = vm2.items.join(',');
+			}
+			refreshResult();
+		}
+
+		function addMoney(){
+			var input = document.getElementById('moneyInput');
+			var moneyStr =  input.value;
+			if(moneyStr){
+				vm2.items.push(parseFloat(moneyStr));
+				updateMoney();
+			}
+			input.focus();
+		}
+
+		function categoryChange(obj){
+			console.log(obj.value);
+			if(obj.value){
+				var itemsStr = localStorage[obj.value];
+				if(itemsStr){
+					vm2.items = itemsStr.split(',');
+					//					vm2.items.splice(0, vm2.items.length, itemsStr.split(','));
+				}else{
+					vm2.items = [];
+				}
+			}else{
+				vm2.items = [];
+			}
+			
+		}
+
+
+   </script>
+</html>

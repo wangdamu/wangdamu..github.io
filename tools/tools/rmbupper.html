@@ -1,0 +1,35 @@
+<html>
+   <head> 
+   	<meta charset="UTF-8" />
+   		<title>人民币大写转换</title>
+   		<script type="text/javascript" src="../js/common.js"></script>
+   		<style type="text/css">
+   			.mainPanel{width:90%;height: 90%;background-color: #EEE; margin: auto;padding-left:40px;padding-top: 40px;font-size: 25px;}
+   			.mainPanel input{width: 80%;height: 30px;font-size: 25px;color:orange;}
+   			.moneydisplay{margin-top:20px;}
+   			#moneydisplayspan{color:red;}
+   		</style>
+   </head>
+   <body>
+      <div class="mainPanel">
+	       <div>
+	       	 <span>额度：</span><input type="text" name="" id="money">
+	       </div>
+	       <div id="moneydisplay">
+	       	 <span>结果：</span><span id="moneydisplayspan"></span>
+	       </div>
+       </div>
+   </body>
+   <script type="text/javascript">
+   		document.getElementById('money').onkeyup = toUpper;
+
+   		function toUpper(){
+   			var val = document.getElementById('money').value;
+   			var pv = val?upMoneyDigit(parseFloat(val)):'';
+   			document.getElementById('moneydisplayspan').innerHTML = pv;
+   		}
+
+   		toUpper();
+
+   </script>
+</html>

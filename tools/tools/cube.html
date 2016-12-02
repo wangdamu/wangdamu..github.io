@@ -1,0 +1,45 @@
+<html>
+   <head> 
+   	<meta charset="UTF-8" />
+   		<title>魔方</title>
+         <script type="text/javascript" src="../js/vue.min.js"></script>
+   		<script type="text/javascript" src="../js/common.js"></script>
+   		<style type="text/css">
+   			.mainPanel{width:90%;height: 90%;background-color: #EEE; margin: auto;padding-left:40px;padding-top: 40px;font-size: 25px;}
+   			
+            .leftPanel{
+               width: 70%; display: inline-block;
+            }
+            .face{width: 30px; height: 30px; padding: 1px;}
+            .face1{background-color: red;}
+            .face2{background-color: #FFF;}
+   		</style>
+   </head>
+   <body>
+      <div class="mainPanel">
+	       <div class="left-panel" id="cubeDisplay">
+             <ul>
+                <li></li>
+                <li class="up">
+                   <table>
+                      <tr v-for="row in up">
+                         <td v-for="ele in row">
+                            <div class="face face{{ele}}"></div>
+                         </td>
+                      </tr>
+                   </table>
+                </li>
+             </ul>
+          </div>
+       </div>
+   </body>
+   <script type="text/javascript">
+		var vm = new Vue({
+         el: '#cubeDisplay',
+         data: {
+            up:[[1,2,1],[1,1,1],[1,1,1]]
+         },
+      });
+
+   </script>
+</html>

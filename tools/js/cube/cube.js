@@ -63,9 +63,9 @@ Cube.prototype.up2left = function(index){
 		ret.back = this.back.dup();
 	}
 
-	ret.up = replaceRow(this.up, this.right.col(index + 1), index);
+	ret.up = replaceRow(this.up, reverseVector(this.right.col(index + 1)), index);
 	ret.left = replaceCol(this.left, this.up.row(index + 1), this.left.cols() - index - 1);
-	ret.bottom = replaceRow(this.bottom, this.left.col(this.left.cols() - index), this.bottom.rows() - index - 1);
+	ret.bottom = replaceRow(this.bottom, reverseVector(this.left.col(this.left.cols() - index)), this.bottom.rows() - index - 1);
 	ret.right = replaceCol(this.right, this.bottom.row(this.bottom.rows() - index), index);
 
 	return ret;
@@ -88,9 +88,9 @@ Cube.prototype.up2right = function(index){
 	}
 
 	ret.up = replaceRow(this.up, this.left.col(this.left.cols() - index), index);
-	ret.left = replaceCol(this.left, this.bottom.row(this.bottom.rows() - index), this.left.cols() - index - 1);
+	ret.left = replaceCol(this.left, reverseVector(this.bottom.row(this.bottom.rows() - index)), this.left.cols() - index - 1);
 	ret.bottom = replaceRow(this.bottom, this.right.col(index + 1), this.bottom.rows() - index - 1);
-	ret.right = replaceCol(this.right, this.up.row(index + 1), index);
+	ret.right = replaceCol(this.right, reverseVector(this.up.row(index + 1)), index);
 
 	return ret;
 }
@@ -113,8 +113,8 @@ Cube.prototype.front2left = function(index){
 
 	ret.front = replaceRow(this.front, this.right.row(index + 1), index);
 	ret.left = replaceRow(this.left, this.front.row(index + 1), index);
-	ret.back = replaceRow(this.back, this.left.row(index + 1), this.back.rows() - index - 1);
-	ret.right = replaceRow(this.right, this.back.row(this.back.rows() - index), index);
+	ret.back = replaceRow(this.back, reverseVector(this.left.row(index + 1)), this.back.rows() - index - 1);
+	ret.right = replaceRow(this.right, reverseVector(this.back.row(this.back.rows() - index)), index);
 
 	return ret;
 }
@@ -136,8 +136,8 @@ Cube.prototype.front2right = function(index){
 	}
 
 	ret.front = replaceRow(this.front, this.left.row(index + 1), index);
-	ret.left = replaceRow(this.left, this.back.row(this.back.rows() - index), index);
-	ret.back = replaceRow(this.back, this.right.row(index + 1), this.back.rows() - index - 1);
+	ret.left = replaceRow(this.left, reverseVector(this.back.row(this.back.rows() - index)), index);
+	ret.back = replaceRow(this.back, reverseVector(this.right.row(index + 1)), this.back.rows() - index - 1);
 	ret.right = replaceRow(this.right, this.front.row(index + 1), index);
 
 	return ret;
@@ -150,13 +150,21 @@ Cube.prototype.isFinished = function(){
 		 && isPureMatrix(this.bottom) && isPureMatrix(this.left) && isPureMatrix(this.right);
 }
 
+Cube.prototype.inspect = function(){
+	console.log('front:' + this.front.inspect());
+	console.log('up:' + this.up.inspect());
+	console.log('back:' + this.back.inspect());
+	console.log('bottom:' + this.bottom.inspect());
+	console.log('left:' + this.left.inspect());
+	console.log('right:' + this.right.inspect());
+}
 
 Cube.prototype.identity = function(){
 	var scores = [this.calMatrixScore(this.front), this.calMatrixScore(this.up),
 	         this.calMatrixScore(this.back), this.calMatrixScore(this.bottom),
 	         this.calMatrixScore(this.left), this.calMatrixScore(this.right)];
 
-	 scores.sort(function(a, b){return a - b;});
+	 //scores.sort(function(a, b){return a - b;});
 
 	 var ret = 0;
 	 for(var i = 0; i < scores.length; i++){
@@ -224,8 +232,10 @@ function replaceCol(target, sourceVector, col){
 	});
 }
 
-function _up2front(front, up, back, bottom, index){
-	
+function reverseVector(vector){
+	return vector.map(function(x, i){
+		return vector.e(vector.dimensions() - i + 1);
+	});
 }
 
 function createAntiDiagonal(len){
@@ -279,32 +289,117 @@ CubeWrapper.prototype.getOperationIndex = function(){
 
 var operations = ['up2back', 'up2front', 'up2left', 'up2right', 'front2left', 'front2right'];
 
+//var operations = ['up2right'];
 function CubeRestore(){}
 
 CubeRestore.prototype.findSolution = function(rootCube){
 	var cubeWrapper = new CubeWrapper(rootCube);
 	var visited = {};
-	this._findSolution(cubeWrapper, visited);
-}
-
-CubeRestore.prototype._findSolution(cubeWrapper, visited){
-	var identity = cubeWrapper.cube.identity();
-	if(visited.hasOwnProperty(identity) || visited.length > 1000000){
-		return;
+	var queue = [cubeWrapper];
+	var solutionLeaf;
+	var counterWapper = {count:0};
+	while(queue.length > 0){
+		console.log(queue.length);
+		solutionLeaf = this._findSolution(queue, visited, counterWapper);
+		if(solutionLeaf){
+			break;
+		}
 	}
+	
+	if(solutionLeaf){
+		var ret = [];
+		var node = solutionLeaf;
+		while(node.getOperation()){
+			ret.push([node.getOperation(), node.getOperationIndex()]);
+			node = node.parent;
+		}
 
-	visited[identity] = 1;
-	for(var i = 0; i < operations.length; i++){
-		for(var j = 0; j < cubeWrapper.cube.up.rows(); j++){
-			var newCube = cubeWrapper.cube[operations[i]](j);
-			
+		for(var i = ret.length - 1; i >= 0; i--){
+			console.log(ret[i]);
 		}
 	}
 }
 
+CubeRestore.prototype._findSolution = function(queue, visited, counterWapper){
+	if(queue.length <= 0){
+		return null;
+	}
+	var len = queue.length;
+	for(var o = 0; o < len; o++){
+		var cubeWrapper = queue[o];
+		//if(!cubeWrapper.getOperation() || (cubeWrapper.getOperation() == 'up2right' && cubeWrapper.getOperationIndex() == 0)){
+		//	console.log(cubeWrapper.getOperation() + '  ' + cubeWrapper.getOperationIndex());
+		//	cubeWrapper.cube.inspect();
+		//}
+
+		var finished = cubeWrapper.cube.isFinished();
+		if(finished){
+			return cubeWrapper;
+		}
+
+		var identity = cubeWrapper.cube.identity();
+		if(visited.hasOwnProperty(identity) || counterWapper.count > 1000000){
+			continue;
+		}
+		visited[identity] = 1;
+		counterWapper.count++;
+
+		for(var i = 0; i < operations.length; i++){
+			for(var j = 0; j < cubeWrapper.cube.up.rows(); j++){
+				var newCube = cubeWrapper.cube[operations[i]](j);
+				//newCube.inspect();
+				var newCubeWrapper = new CubeWrapper(newCube);
+				cubeWrapper.children.push(newCubeWrapper);
+				newCubeWrapper.parent = cubeWrapper;
+				newCubeWrapper.operation = operations[i];
+				newCubeWrapper.operationIndex = j;
+
+				queue.push(newCubeWrapper);
+			}
+		}
+	}
+	queue.splice(0, len);
+}
+
+var ORANGE = 0;
+var BLUE = 1;
+var WHITE = 2;
+var GREEN = 3;
+var RED = 4;
+var YELLOW = 5;
+
+
+var cube = new Cube();
+/*
+cube.front = $M([[RED, GREEN, GREEN], [ORANGE, RED, WHITE], [ORANGE, BLUE, WHITE]]);
+cube.up = $M([[RED, YELLOW, ORANGE], [RED, YELLOW, ORANGE], [BLUE, YELLOW, WHITE]]);
+cube.back = $M([[YELLOW, GREEN, BLUE], [YELLOW, WHITE, ORANGE], [BLUE, BLUE, WHITE]]);
+cube.bottom = $M([[RED, RED, GREEN], [ORANGE, ORANGE, YELLOW], [GREEN, WHITE, YELLOW]]);
+cube.left = $M([[ORANGE, WHITE, YELLOW], [RED, GREEN, GREEN], [RED, GREEN, GREEN]]);
+cube.right = $M([[WHITE, WHITE, ORANGE], [BLUE, BLUE, RED], [BLUE, BLUE, YELLOW]]);
+*/
+
+cube.front = $M([[RED, RED], [RED, RED]]);
+cube.up = $M([[YELLOW, YELLOW], [YELLOW, YELLOW]]);
+cube.back = $M([[BLUE,BLUE], [BLUE,BLUE]]);
+cube.bottom = $M([[ORANGE,ORANGE], [ORANGE,ORANGE]]);
+cube.left = $M([[WHITE,WHITE], [WHITE,WHITE]]);
+cube.right = $M([[GREEN,GREEN], [GREEN,GREEN]]);
+
+cube = cube.up2left(0);
+cube = cube.front2left(0);
+//cube.inspect();
+//console.log('=======================');
+//cube.up2right(0).inspect();
+
+var cubeRestore = new CubeRestore();
+var ret = cubeRestore.findSolution(cube);
 
 
 
+
+
+/*
 var arr = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]];
 var face = $M(arr);
 
@@ -344,10 +439,13 @@ console.log(isPureMatrix(newCube.up));
 var newCube2 = newCube.front2right(0);
 console.log(newCube2);
 
-console.log(newCube.isFinished());
+console.log(newCube2.isFinished());
 
 console.log(newCube.identity() + "   " + newCube2.identity());
 
+var v = Vector.create([6,2,9]);
+console.log(reverseVector(v));
+*/
 //var arr2 = [[-1, -2, -3, -4], [-5, -6, -7, -8], [-9, -10, -11, -12], [-13, -14, -15, -16]];
 
 //var face2 = $M(arr2);

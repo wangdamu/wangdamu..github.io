@@ -17,7 +17,16 @@
    </head>
    <body>
       <div class="mainPanel">
-      		<span>结果：</span><a href="javascript:refreshResult();">刷新</a>
+      		<span>结果：</span><a href="javascript:refreshResult();">刷新</a>|<a href="javascript:clearCache();">清空缓存</a>
+      		<!--
+      		<div class="total-limit-container">
+      			<ul>
+      				<li><span>是否限制总额度: </span><input type="checkbox" v-model="limitFlag"></li>
+      				<li v-show="limitFlag"><input type="text" v-model="limitAmmount"><input type="button" v-on:click="reCalTotal()" value="计算限制后的发票"></input></li>
+      			</ul>
+      			
+      		</div>
+      		-->
 	       <ul id="invoiceDisplay">
 	       	<li v-for="ret in resultList">
 	       		<input type="checkbox" name="" v-model="selectedCache[ret.title]" v-on:change="selectChange"><span class="data">{{ret.title}}</span>的发票有￥<span class="data">{{ret.money}}</span>（张数：<span class="data">{{ret.ammount}}（{{ret.ammountUpper}}）</span>张）
@@ -56,7 +65,12 @@
 					for(var i = 0; i < this.resultList.length; i++){
 						var r = this.resultList[i];
 						if(this.selectedCache[r.title]){
-							totalMoney += r.money;
+							if(r.replaceMoney){
+								totalMoney += r.replaceMoney;
+							}else{
+								totalMoney += r.money;
+							}
+							
 							totalAmmount += r.ammount;
 						}
 					}
@@ -68,6 +82,30 @@
 			methods: {
     			selectChange: function (event) {
     				this.selectChangeCounter++;
+    			},
+    			reCalTotal: function(totalLimit){
+    				var changed = false;
+    				for(var i = 0; i < this.resultList.length; i++){
+						var r = this.resultList[i];
+						if(r.replaceMoney){
+							delete r.replaceMoney;
+							changed = true;
+						}
+    				}
+    				var find = false;
+    				if(totalLimit < this.total.totalMoney){
+    					for(var i = 0; i < this.resultList.length; i++){
+							var r = this.resultList[i];
+							if(this.selectedCache[r.title]){
+								r.replaceMoney = r.money - (this.total.totalMoney - totalLimit);
+								find = true;
+								changed = true;
+							}
+						}
+    				}
+    				if(changed){
+    					this.selectChangeCounter++;
+    				}
     			}
     		}
 		});
@@ -80,6 +118,29 @@
 			el: '#inputing',
 			data: {'categories':categories, 'items':[]}
 		});
+
+		var totalLimit = new Vue({
+			el: '.total-limit-container',
+			data: {limitFlag: false, limitAmmount:0},
+			methods: {
+    			reCalTotal: function (event) {
+    				if(this.limitFlag){
+    					vm.reCalTotal(this.limitAmmount);
+    				}
+    				
+    			}
+    		}
+		});
+
+		function clearCache(){
+			for(var i = 0; i < categories.length; i++){
+				if(localStorage[categories[i]]){
+					delete localStorage[categories[i]];
+				}
+			}
+			vm2.items = [];
+			refreshResult();
+		}
 
 		function refreshResult(){
 			var resultList = [];

@@ -1,0 +1,49 @@
+<html>
+   <head> 
+   	<meta charset="UTF-8" />
+   		<title>文件base64编码转换</title>
+         <script type="text/javascript" src="../js/vue.min.js"></script>
+   		<style type="text/css">
+   			.mainPanel{width:90%;height: 90%;background-color: #EEE; margin: auto;padding-left:40px;padding-top: 40px;font-size: 25px;}
+   			.mainPanel input{width: 80%;height: 30px;font-size: 25px;color:orange;}
+   			.moneydisplay{margin-top:20px;}
+   			#moneydisplayspan{color:red;}
+            #uploadDisplay{min-width: 300px; min-height: 300px;}
+            .tips{color: red; font-size: 20px;}
+   		</style>
+   </head>
+   <body>
+      <div id="mainPanel" class="mainPanel">
+	       <span>上传文件:</span><input type="file" name="file" v-on:change="filechange">
+          <div class="tips">使用Ctrl+C复制base64</div>
+          <div><textarea id="hiddenCopyInput" rows="5" cols="30"></textarea></div>
+          <img src="" id="uploadDisplay">
+       </div>
+   </body>
+   <script type="text/javascript">
+   		var fileBase64 = new Vue({
+            el: '#mainPanel',
+            data: {},
+            methods: {
+               filechange: function (event) {
+                  var reader = new FileReader();
+                  if(event.target.files && event.target.files.length > 0){
+                     reader.readAsDataURL(event.target.files[0]);
+                     reader.onload = function(e){
+                        // console.log(e.target.result);
+                        var hiddenInput=document.getElementById("hiddenCopyInput");//对象是contents 
+                        hiddenInput.innerHTML = e.target.result;
+                        document.getElementById('uploadDisplay').src = e.target.result;
+
+                       
+                        hiddenInput.select(); //选择对象 
+                        document.execCommand("Copy"); //执行浏览器复制命令
+                        console.log('Base64内容copy到粘贴板了');
+                    };
+                 }
+               }
+            }
+         });
+
+   </script>
+</html>

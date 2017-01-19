@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>ge</title>
+	<script type="text/javascript" src="../js/geneticalgorithm.js"></script>
+</head>
+<body>
+
+</body>
+<script type="text/javascript">
+
+	function calFitness(chromosome){
+		var ret = 0;
+		for(var i = 0; i < chromosome.length; i++){
+			ret += chromosome[i];
+		}
+		return Math.pow(ret, 3);
+	}
+
+	var population = new Population(10000, 15);
+	population.init(100, 3, 3, 0.03);
+	population.displayTotalFitness(calFitness);
+	population.evolution(calFitness);
+
+	console.log(population.individuals[0].chromosome);
+</script>
+</html>

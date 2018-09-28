@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>房租结算器</title>
+    <script type="text/javascript" src="../js/vue.min.js"></script>
+    <script type="text/javascript" src="../js/common.js"></script>
+    <style>
+        .subtotal{padding-top: 20px}
+        .sub-container{float: left;
+            padding-left: 30px;}
+        .clear{clear: both}
+        .total{
+            font-weight:bold;}
+    </style>
+</head>
+<body>
+    <div id="rent-tool">
+        <div class="params">
+            <div>
+                <label>押金: </label><input v-model="deposit"/>
+            </div>
+            <div>
+            <div class="electricity sub-container">
+                <h4>电费</h4>
+                <div><label>峰值单价：</label><input v-model="ele.peakPrice"/></div>
+                <div><label>峰值单价：</label><input v-model="ele.valleyPrice"/></div>
+                <div><label>峰值(租前抄表): </label><input v-model="ele.peakBeforeRent"/></div>
+                <div><label>谷值(租前抄表): </label><input v-model="ele.valleyBeforeRent"/></div>
+                <div><label>峰值(租时抄表): </label><input v-model="ele.peakWhenRent"/></div>
+                <div><label>谷值(租时抄表): </label><input v-model="ele.valleyWhenRent"/></div>
+                <div><label>峰值(退租前抄表): </label><input v-model="ele.peakBeforeReturn"/></div>
+                <div><label>谷值(退租前抄表): </label><input v-model="ele.valleyBeforeReturn"/></div>
+                <div><label>峰值(退租时抄表): </label><input v-model="ele.peakWhenReturn"/></div>
+                <div><label>谷值(退租时抄表): </label><input v-model="ele.valleyWhenReturn"/></div>
+                <div class="subtotal">
+                    <div>
+                        <label>小记(峰)：</label>{{ele.peakSubtotal}}
+                    </div>
+                    <div>
+                        <label>小记(谷)：</label>{{ele.valleySubtotal}}
+                    </div>
+                    <div>
+                        <label>小记：</label>{{ele.subtotal}}
+                    </div>
+                </div>
+            </div>
+            <div class="water sub-container">
+                <h4>水费</h4>
+                <div><label>单价：</label><input v-model="water.price"/></div>
+                <div><label>租前抄表：</label><input v-model="water.amountBeforeRent"/></div>
+                <div><label>租时抄表：</label><input v-model="water.amountWhenRent"/></div>
+                <div><label>退租前抄表：</label><input v-model="water.amountBeforeReturn"/></div>
+                <div><label>退租时抄表：</label><input v-model="water.amountWhenReturn"/></div>
+                <div class="subtotal"><label>小记：</label>{{water.subtotal}}</div>
+            </div>
+            <div class="gas sub-container">
+                <h4>燃气费</h4>
+                <div><label>单价：</label><input v-model="gas.price"/></div>
+                <div><label>租时抄表：</label><input v-model="gas.amountWhenRent"/></div>
+                <div><label>退租时抄表：</label><input v-model="gas.amountWhenReturn"/></div>
+                <div class="subtotal"><label>小记：</label>{{gas.subtotal}}</div>
+            </div>
+            <div class="clear"></div>
+        <div class="total">
+            <label>总计: </label>{{total}}
+        </div>
+                <div><button v-on:click="save">保存</button></div>
+    </div>
+</body>
+<script type="text/javascript">
+var vm = new Vue({
+    el: '#rent-tool',
+    data: {
+        deposit: 0,
+        ele:{
+            peakPrice: 0.5583,
+            valleyPrice: 0.3583,
+            peakBeforeRent: 0,
+            valleyBeforeRent: 0,
+            peakWhenRent: 0,
+            valleyWhenRent: 0,
+            peakBeforeReturn: 0,
+            valleyBeforeReturn: 0,
+            peakWhenReturn: 0,
+            valleyWhenReturn: 0,
+            peakSubtotal: 0,
+            valleySubtotal: 0,
+            subtotal: 0
+        },
+        water:{
+            price: 3.45,
+            amountBeforeRent: 0,
+            amountWhenRent: 0,
+            amountBeforeReturn: 0,
+            amountWhenReturn: 0,
+            subtotal: 0
+        },
+        gas:{
+            price: 2.48,
+            amountWhenRent: 0,
+            amountWhenReturn: 0,
+            subtotal: 0
+        }
+    },
+    created: function() {
+        var deposit = localStorage.getItem("rent.deposit")
+        if(deposit) {
+            this.deposit = parseFloat(deposit)
+        }
+        var ele = localStorage.getItem("rent.ele")
+        if(ele) {
+            this.ele = JSON.parse(ele)
+        }
+        var water = localStorage.getItem("rent.water")
+        if(water) {
+            this.water = JSON.parse(water)
+        }
+        var gas = localStorage.getItem("rent.gas")
+        if(gas) {
+            this.gas = JSON.parse(gas)
+        }
+    },
+    methods: {
+        computeEleWater: function (price, amountBeforeRent, amountWhenRent, amountBeforeReturn, amountWhenReturn) {
+            // 返回房东向租客返还的金额
+            var returnAmount = (amountWhenRent - amountBeforeRent) - (amountWhenReturn - amountBeforeReturn)
+            return returnAmount * price
+        },
+        computeGas: function (price, amountWhenRent, amountWhenReturn) {
+            var returnAmount = amountWhenReturn - amountWhenRent
+            return returnAmount * price
+        },
+        save: function () {
+            localStorage.setItem("rent.deposit", this.deposit)
+            localStorage.setItem("rent.ele", JSON.stringify(this.ele))
+            localStorage.setItem("rent.gas", JSON.stringify(this.gas))
+            localStorage.setItem("rent.water", JSON.stringify(this.water))
+        }
+    },
+    computed: {
+        total: function () {
+            // 电费
+            this.ele.peakSubtotal = this.computeEleWater(this.ele.peakPrice, this.ele.peakBeforeRent, this.ele.peakWhenRent, this.ele.peakBeforeReturn, this.ele.peakWhenReturn)
+            this.ele.valleySubtotal = this.computeEleWater(this.ele.valleyPrice, this.ele.valleyBeforeRent, this.ele.valleyWhenRent, this.ele.valleyBeforeReturn, this.ele.valleyWhenReturn)
+            this.ele.subtotal = this.ele.peakSubtotal + this.ele.valleySubtotal
+
+            // 水费
+            this.water.subtotal = this.computeEleWater(this.water.price, this.water.amountBeforeRent, this.water.amountWhenRent, this.water.amountBeforeReturn, this.water.amountWhenReturn)
+
+            // 燃气
+            this.gas.subtotal = this.computeGas(this.gas.price, this.gas.amountWhenRent, this.gas.amountWhenReturn)
+
+            return this.deposit + this.ele.subtotal + this.water.subtotal + this.gas.subtotal
+        }
+    }
+    })
+</script>
+</html>

@@ -69,6 +69,10 @@
     </div>
 </body>
 <script type="text/javascript">
+    function  round(value) {
+        return Math.round(value * 100) / 100
+    }
+
 var vm = new Vue({
     el: '#rent-tool',
     data: {
@@ -142,16 +146,22 @@ var vm = new Vue({
         total: function () {
             // 电费
             this.ele.peakSubtotal = this.computeEleWater(this.ele.peakPrice, this.ele.peakBeforeRent, this.ele.peakWhenRent, this.ele.peakBeforeReturn, this.ele.peakWhenReturn)
+            this.ele.peakSubtotal = round(this.ele.peakSubtotal)
+
             this.ele.valleySubtotal = this.computeEleWater(this.ele.valleyPrice, this.ele.valleyBeforeRent, this.ele.valleyWhenRent, this.ele.valleyBeforeReturn, this.ele.valleyWhenReturn)
+            this.ele.valleySubtotal = round(this.ele.valleySubtotal)
             this.ele.subtotal = this.ele.peakSubtotal + this.ele.valleySubtotal
+            this.ele.subtotal = round(this.ele.subtotal)
 
             // 水费
             this.water.subtotal = this.computeEleWater(this.water.price, this.water.amountBeforeRent, this.water.amountWhenRent, this.water.amountBeforeReturn, this.water.amountWhenReturn)
+            this.water.subtotal = round(this.water.subtotal)
 
             // 燃气
             this.gas.subtotal = this.computeGas(this.gas.price, this.gas.amountWhenRent, this.gas.amountWhenReturn)
+            this.gas.subtotal = round(this.gas.subtotal)
 
-            return this.deposit + this.ele.subtotal + this.water.subtotal + this.gas.subtotal
+            return round(this.deposit + this.ele.subtotal + this.water.subtotal + this.gas.subtotal)
         }
     }
     })

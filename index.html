@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="stylesheets/core.css" media="screen">
     <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)">
     <link rel="stylesheet" href="stylesheets/github-light.css">
-
+    <link rel="stylesheet" href="stylesheets/maze.css">
     <style type="text/css">
       .container{text-align: center;}
       div.title{background-image: url(images/bg-ramp.jpg)}
@@ -22,14 +22,15 @@
      
     </script>
     <title>The Home Page Of Peter</title>
+
   </head>
 
-  <body>
+  <body onkeydown="keyMove(event)">
     <div class="container">
       <div class="title">
         <a href="tools/index.html">工具</a>
       </div>
-      <div class="poem">
+ <!--   <div class="poem">
       <pre>
                   <span class="title">蜀道难</span>
                       <span class="author">李白</span>
@@ -56,18 +57,13 @@
       蜀道之难，难于上青天，侧身西望长咨嗟！
       </pre>
       </div>
-      <div>
-        <div>
-        <input type="radio" name="sex" value="1" checked="checked">男&nbsp;<input type="radio" name="sex" value="2">女
-        </div>
-        <div>
-          <select>
-            <option value="0">上山打老虎11</option>
-            <option value="1" selected="selected">上山打老虎</option>
-            <option value="2">上山打老虎22</option>
-          </select>
-        </div>
-      </div>
+      -->
+
+
+    <!-- 迷宫游戏 -->
+    <div class="row maze-game-container enable-game"><div id=wrap><canvas id="maze-content" width=800 height=480></canvas><div id=man></div></div><div class="col-md-12"><p class="maze-game-info"><span>你可以使用 <kbd>w</kbd>、<kbd>a</kbd>、<kbd>s</kbd>、<kbd>d</kbd>，或者方向键进行游戏。</span></p></div></div>
+
     </div>
   </body>
+  <script type="application/javascript" src="javascripts/maze-game.js"></script>
 </html>

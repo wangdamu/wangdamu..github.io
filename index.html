@@ -61,7 +61,13 @@
 
 
     <!-- 迷宫游戏 -->
-    <div class="row maze-game-container enable-game"><div id=wrap><canvas id="maze-content" width=800 height=480></canvas><div id=man></div></div><div class="col-md-12"><p class="maze-game-info"><span>你可以使用 <kbd>w</kbd>、<kbd>a</kbd>、<kbd>s</kbd>、<kbd>d</kbd>，或者方向键进行游戏。</span></p></div></div>
+    <div class="row maze-game-container enable-game">
+      <div id=wrap><canvas id="maze-content" width=800 height=480></canvas><div id=man></div></div><div class="col-md-12"><p class="maze-game-info"><span>你可以使用 <kbd>w</kbd>、<kbd>a</kbd>、<kbd>s</kbd>、<kbd>d</kbd>，或者方向键进行游戏。</span></p></div>
+      <div id=success>
+        success</br>
+        <div id=success_btn onclick="success.style.display = 'none';">OK</div>
+      </div>
+    </div>
 
     </div>
   </body>

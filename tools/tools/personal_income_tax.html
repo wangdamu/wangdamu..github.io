@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>个税计算器</title>
+    <script type="text/javascript" src="../js/vue.min.js"></script>
+    <script type="text/javascript" src="../js/common.js"></script>
+    <style>
+        .tax-list th{
+            width: 150px;
+            text-align: left;
+        }
+        .month_item_0 {
+            background-color: grey;
+        }
+        .subtotal{
+            padding-top: 20px;
+            background-color: yellow;
+        }
+        .sub-container{float: left;
+            padding-left: 30px;}
+        .clear{clear: both}
+        .total{
+            font-weight:bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="personal-income-tax-tool">
+        <div class="input">
+            <table>
+                <tr>
+                    <td>
+                        税前金额：<input v-model="personalIncomeInput.amountBfTax"/>
+                        五险一金：<input v-model="personalIncomeInput.amountSocialSecurity"/>
+                        免税额：<input v-model="personalIncomeInput.amountFreeTaxBase"/>
+                        专项附加免税额：<input v-model="personalIncomeInput.amountFreeTaxSpecial"/>
+                        其他免税额：<input v-model="personalIncomeInput.amountFreeTaxOther"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="tax-list">
+            <table>
+                <tr>
+                    <th>月</th>
+                    <th>税前金额</th>
+                    <th>五险一金</th>
+                    <th>免税额</th>
+                    <th>专项附加免税额</th>
+                    <th>其他免税额</th>
+                    <th>预交应纳税所得</th>
+                    <th>应纳税额</th>
+                    <th>已缴税额</th>
+                    <th>个人所得税</th>
+                    <th>到手</th>
+                </tr>
+                <tr v-for="tax in taxList" class="month_item_{{ $index % 2 }}">
+                    <td>{{tax.month}}</td>
+                    <td>{{tax.amountBfTax}}</td>
+                    <td>{{tax.amountSocialSecurity}}</td>
+                    <td>{{tax.amountFreeTaxBase}}</td>
+                    <td>{{tax.amountFreeTaxSpecial}}</td>
+                    <td>{{tax.amountFreeTaxOther}}</td>
+                    <td>{{tax.amountForTax}}</td>
+                    <td>{{tax.taxWithoutLastMonth}}</td>
+                    <td>{{tax.taxPaid}}</td>
+                    <td>{{tax.tax}}</td>
+                    <td>{{tax.salaryInHands}}</td>
+                </tr>
+                <tr class="subtotal">
+                    <td>小计</td>
+                    <td>{{subTotal.amountBfTax}}</td>
+                    <td>{{subTotal.amountSocialSecurity}}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>{{subTotal.tax}}</td>
+                    <td>{{subTotal.salaryInHands}}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="total">
+            全年个人所得税： {{totalTax}}
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+    function  round(value) {
+        return Math.round(value * 100) / 100
+    }
+
+    function PersonalIncomeTax() {
+        this.month = 0
+        this.amountBfTax = 0
+        this.amountSocialSecurity = 0
+        this.amountFreeTaxBase = 5000
+        this.amountFreeTaxSpecial = 0
+        this.amountFreeTaxOther = 0
+        this.amountForTax = 0
+        this.taxWithoutLastMonth = 0
+        this.taxPaid = 0
+        this.tax = 0
+        this.salaryInHands = 0
+    }
+    
+    PersonalIncomeTax.prototype.copyFrom = function (pit) {
+        this.amountBfTax = parseFloat(pit.amountBfTax)
+        this.amountSocialSecurity = parseFloat(pit.amountSocialSecurity)
+        this.amountFreeTaxBase = parseFloat(pit.amountFreeTaxBase)
+        this.amountFreeTaxSpecial = parseFloat(pit.amountFreeTaxSpecial)
+        this.amountFreeTaxOther = parseFloat(pit.amountFreeTaxOther)
+        this.amountForTax = parseFloat(pit.amountForTax)
+        this.tax = parseFloat(pit.tax)
+        this.salaryInHands = parseFloat(pit.salaryInHands)
+    }
+
+    PersonalIncomeTax.prototype.add = function (p) {
+        this.amountBfTax = this.amountBfTax + p.amountBfTax
+        this.amountSocialSecurity = this.amountSocialSecurity + p.amountSocialSecurity
+        this.amountFreeTaxBase = this.amountFreeTaxBase + p.amountFreeTaxBase
+        this.amountFreeTaxSpecial = this.amountFreeTaxSpecial + p.amountFreeTaxSpecial
+        this.amountFreeTaxOther = this.amountFreeTaxOther + p.amountFreeTaxOther
+        this.amountForTax = this.amountForTax + p.amountForTax
+        this.tax = this.tax + p.tax
+        this.salaryInHands = this.salaryInHands + p.salaryInHands
+    }
+
+    var taxPoint = [36000, 144000, 300000, 420000, 660000, 960000, 2100000000]
+    var taxRate = [0.03, 0.1, 0.2, 0.25, 0.3, 0.35, 0.45]
+
+var vm = new Vue({
+    el: '#personal-income-tax-tool',
+    data: {
+        personalIncomeInput: new PersonalIncomeTax(),
+        taxList: [
+
+        ]
+    },
+    created: function() {
+        for(var i = 0; i < 12; i++){
+            var pit = new PersonalIncomeTax();
+            pit.month = i + 1
+            this.taxList.push(pit);
+        }
+    },
+    methods: {
+        calculateTax: function () {
+            var lastMonthPit = null;
+            for(var i = 0; i < this.taxList.length; i++){
+                var taxObj = this.taxList[i]
+                taxObj.copyFrom(this.personalIncomeInput)
+
+                var lastTax = 0
+                if(lastMonthPit){
+                    taxObj.add(lastMonthPit)
+                    lastTax = lastMonthPit.tax
+                    taxObj.taxPaid = lastMonthPit.taxWithoutLastMonth
+                }
+                lastMonthPit = taxObj
+
+                taxObj.amountForTax = taxObj.amountBfTax - taxObj.amountSocialSecurity - taxObj.amountFreeTaxBase - taxObj.amountFreeTaxSpecial - taxObj.amountFreeTaxOther;
+                if(taxObj.amountForTax > 0){
+                    var left = taxObj.amountForTax
+                    var taxShouldPay = 0
+                    var taxIndex = -1
+                    for(var j = taxPoint.length - 1; j >= 0 ; j--) {
+                        var tp = taxPoint[j]
+                        if(tp < taxObj.amountForTax){
+                            taxIndex = j
+                            break
+                        }
+                    }
+
+                    for(var j = taxIndex; j >= -1; j--){
+                        var ta = left - (j >= 0? taxPoint[j]:0);
+                        taxShouldPay += ta * taxRate[j + 1]
+                        left -= ta;
+                    }
+
+                    taxObj.taxWithoutLastMonth = taxShouldPay
+
+//                    var taxIndex = 0
+//                    for(var j = 0; j < taxPoint.length; j++){
+//                        var tp = taxPoint[j]
+//                        if(taxObj.amountForTax <= tp){
+//                            taxIndex = j
+//                            break;
+//                        }
+//                    }
+
+//                    taxObj.taxWithoutLastMonth = taxObj.amountForTax * taxRate[j]
+                    taxObj.tax = taxObj.taxWithoutLastMonth - taxObj.taxPaid
+                    taxObj.salaryInHands = this.personalIncomeInput.amountBfTax - this.personalIncomeInput.amountSocialSecurity - taxObj.tax;
+                }
+            }
+        }
+    },
+    computed: {
+        totalTax: function () {
+            this.calculateTax();
+            var totalTax = 0
+            for(var i = 0; i < this.taxList.length; i++){
+                var taxObj = this.taxList[i]
+                console.log("===================" + taxObj.amountBfTax)
+                totalTax += taxObj.tax
+            }
+            return totalTax
+        } ,
+        subTotal: function () {
+            var subTotal = new PersonalIncomeTax()
+            for(var i = 0; i < this.taxList.length; i++){
+                var taxObj = this.taxList[i]
+                subTotal.add(taxObj)
+            }
+            subTotal.amountBfTax = this.taxList[this.taxList.length - 1].amountBfTax
+            subTotal.amountSocialSecurity = this.taxList[this.taxList.length - 1].amountSocialSecurity
+
+            return subTotal
+        }
+    }
+    })
+</script>
+</html>
